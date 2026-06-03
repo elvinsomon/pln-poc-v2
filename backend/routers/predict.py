@@ -1,6 +1,8 @@
 """Endpoints de clasificación y alta de tickets."""
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -44,12 +46,12 @@ def create_ticket(payload: TicketCreate, db: Session = Depends(get_db)) -> Ticke
         priority=prio.value,
         priority_rank=rank_for(prio),
         confidence=r.confidence,
+        probabilities=json.dumps(r.probabilities),   # se persiste como JSON
         model_version=svc.version,
     )
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
 
-    resp = TicketResponse.model_validate(ticket)
-    resp.probabilities = r.probabilities  # eco (no se persiste por clase)
-    return resp
+    # model_validate + field_validator parsean la columna JSON -> dict en la respuesta.
+    return TicketResponse.model_validate(ticket)

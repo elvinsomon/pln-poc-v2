@@ -1,0 +1,42 @@
+# Levanta toda la PoC con un solo comando:
+#     docker compose up --build
+# Luego abre  http://localhost:8080  (UI).  API/Swagger en  http://localhost:8000/docs
+#
+# El primer build descarga torch+transformers (varios minutos / ~GB). En el primer
+# arranque el backend siembra 14 tickets demo (idempotente) antes de servir.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: pln-poc-v2-backend
+    environment:
+      DB_URL: sqlite:////data/app.db
+    volumes:
+      # Artefactos del modelo (read-only): NO se copian a la imagen, se montan.
+      - ./backend/artifacts:/app/backend/artifacts:ro
+      # BD persistente (sobrevive a reinicios).
+      - backend-data:/data
+    ports:
+      - "8000:8000"          # API + /docs accesibles directamente (opcional)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 90s      # margen para cargar el modelo + sembrar en el 1er arranque
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: pln-poc-v2-frontend
+    ports:
+      - "8080:80"            # UI -> http://localhost:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  backend-data:

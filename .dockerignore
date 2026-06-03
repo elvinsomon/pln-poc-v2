@@ -1,0 +1,24 @@
+# Contexto de build del backend (context: .). Se excluye todo lo que no necesita
+# la imagen para mantener el contexto pequeño y el build rápido.
+**/.venv
+**/__pycache__
+**/*.pyc
+.git
+.gitignore
+
+# Frontend: tiene su propio build (context ./frontend).
+frontend
+
+# Notebook y datos de entrenamiento no van al runtime del backend.
+notebook
+data
+
+# Los artefactos del modelo se MONTAN como volumen (no se copian a la imagen).
+backend/artifacts
+# La BD vive en el volumen /data, no en la imagen.
+backend/app.db
+
+**/.DS_Store
+*.zip
+*.tgz
+*.7z

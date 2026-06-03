@@ -23,5 +23,6 @@ class Ticket(Base):
     priority = Column(String(16), nullable=False)         # Alta | Media | Baja
     priority_rank = Column(Integer, nullable=False, index=True)  # 0 | 1 | 2 (orden)
     confidence = Column(Float, nullable=False)
+    probabilities = Column(Text, nullable=True)           # JSON {clase: prob}; para el detalle/UI
     created_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow, index=True)
     model_version = Column(String(128), nullable=False)   # ej. distilbert_2026-06-03_v1
